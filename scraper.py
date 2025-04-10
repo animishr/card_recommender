@@ -45,7 +45,7 @@ for issuer in issuers[:1]:
     cards = sp.find_all('div', class_='single_credit_card_box')
     docs = []
 
-    for i, card in enumerate(cards[:5], 1):
+    for i, card in enumerate(cards[:30], 1):
         a_ = card.find('a', class_='title_list_link')
         card_name = a_.text
         card_url = a_["href"]
