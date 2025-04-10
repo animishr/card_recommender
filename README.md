@@ -1,1 +1,1 @@
-# card_recommender
+# Credit Card Recommender
