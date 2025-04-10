@@ -15,10 +15,11 @@ def retrieve(user_input):
     return docs
 
 
-query = "I am a 28 year old woman architect living in New Delhi. I spend mostly booking tickets from " \
-    "Indigo and buying groceries from Big basket. I am looking for a lifetime free card which provides " \
-    "Airport Lounge Access benefits."
+if __name__ == "__main__":
+    import pprint
 
-import pprint
+    query = "I am a 28 year old woman architect living in New Delhi. I spend mostly booking tickets from " \
+        "Indigo and buying groceries from Big basket. I am looking for a lifetime free card which provides " \
+        "Airport Lounge Access benefits."
 
-pprint.pprint(retrieve(query))
+    pprint.pprint(retrieve(query))
