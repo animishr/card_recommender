@@ -19,10 +19,16 @@ from utils.logging_config import LOGGER
 embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 client = QdrantClient(url="http://localhost:6333")
 
-client.create_collection(
-    collection_name="credit_cards",
-    vectors_config=VectorParams(size=384, distance=Distance.COSINE),
-)
+LOGGER.info("Checking if collection exists..")
+if client.collection_exists(collection_name="credit_cards"):
+    LOGGER.info("Collection already exists.")
+
+else:
+    LOGGER.info("Collection does not exist. Creating collection...")
+    client.create_collection(
+        collection_name="credit_cards",
+        vectors_config=VectorParams(size=384, distance=Distance.COSINE),
+    )
 
 vector_store = QdrantVectorStore(
     client=client,
@@ -34,8 +40,9 @@ response = requests.get('https://cardinsider.com/card-issuer/')
 soup = BeautifulSoup(response.content, 'html.parser')
 issuers = soup.find_all('div', class_='item-new')
 credit_cards = []
+iter_num = 1
 
-for issuer in issuers[:1]:
+for issuer in issuers:
     a_ = issuer.find('a')
     bank_name = a_.text
     bank_url = f"https://cardinsider.com{a_['href']}"
@@ -45,7 +52,7 @@ for issuer in issuers[:1]:
     cards = sp.find_all('div', class_='single_credit_card_box')
     docs = []
 
-    for i, card in enumerate(cards[:30], 1):
+    for i, card in enumerate(cards, iter_num):
         a_ = card.find('a', class_='title_list_link')
         card_name = a_.text
         card_url = a_["href"]
@@ -63,12 +70,15 @@ for issuer in issuers[:1]:
             
             docs.append(document)
         
-        except:
+        except Exception as e:
+            LOGGER.error("Error: '%s'. Skipping...", e)
             LOGGER.info("Failed extracting Data for '%s'. Skipping...", card_name)
             sleep(10)
 
+        iter_num += 1
 
-uuids = [str(uuid4()) for _ in range(len(docs))]
-text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=100)
-all_splits = text_splitter.split_documents(docs)
-vector_store.add_documents(documents=docs, ids=uuids)
+    LOGGER.info("Indexing %d record(s) to vectorDB...", len(docs))
+    uuids = [str(uuid4()) for _ in range(len(docs))]
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=100)
+    all_splits = text_splitter.split_documents(docs)
+    vector_store.add_documents(documents=docs, ids=uuids)
