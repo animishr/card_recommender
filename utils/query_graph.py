@@ -28,33 +28,17 @@ class GraphState(TypedDict):
 
 def _metadata_filter(query_intent):
     metadata_filter = {"must": [], "should": []}
+    filter_keys = {"acceptable_fees": "renewal_fee"}
 
-    renewal_fee = query_intent["acceptable_fees"]
-    domestic_lounge_access = query_intent["has_domestic_lounge_access"]
-    golf_benefits = query_intent["has_golf_benefits"]
-    international_lounge_access = query_intent["has_international_lounge_access"]
-    movie_benefits = query_intent["has_movie_benefits"]
-    travel_benefits = query_intent["has_travel_benefits"]
+    for key in query_intent.keys():
+        if key.startswith("has"):
+            filter_key = f"metadata.{key}"
+            metadata_filter["should"].append({"key": filter_key, "match": {"value": True}})
+        else:
+            filter_key = f"metadata.{filter_keys[key]}"
+            value = query_intent["acceptable_fees"]
+            metadata_filter["must"].append({"key": "filter_key", "range": {"lte": value}})
 
-    if renewal_fee:
-       metadata_filter["must"].append({"key": "metadata.renewal_fee", "range": {"lte": renewal_fee}})
-
-    if domestic_lounge_access:
-        metadata_filter["should"].append({"key": "metadata.has_domestic_lounge_access", "match": {"value": True}})
-
-    if golf_benefits:
-        metadata_filter["should"].append({"key": "metadata.has_golf_benefits", "match": {"value": True}})
-
-    if movie_benefits:
-        metadata_filter["should"].append({"key": "metadata.has_movie_benefits", "match": {"value": True}})
-
-    if international_lounge_access:
-        metadata_filter["should"].append({"key": "metadata.has_international_lounge_access", "match": {"value": True}})
-
-    if travel_benefits:
-        metadata_filter["should"].append({"key": "metadata.has_travel_benefits", "match": {"value": True}})
-
-    print(metadata_filter)
     return metadata_filter
 
 
